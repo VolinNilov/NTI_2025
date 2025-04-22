@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация | Умный водопровод</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        .btn-ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-ripple:after {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.2) 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform .5s, opacity 1s;
+        }
+        .btn-ripple:active:after {
+            transform: scale(0, 0);
+            opacity: .3;
+            transition: 0s;
+        }
+        .ha-gradient {
+            background: linear-gradient(135deg, #41BDF5 0%, #4982E6 100%);
+        }
+        #video {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            transform: perspective(1000px) rotateY(0deg);
+            transition: all 0.5s ease;
+        }
+        #video.active {
+            transform: perspective(1000px) rotateY(10deg);
+        }
+        .face-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 2px dashed rgba(65, 189, 245, 0.5);
+            pointer-events: none;
+        }
+        #cameraSection {
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4">
+    <!-- Main Container -->
+    <div class="w-full max-w-md animate-fade-in">
+        <!-- Logo -->
+        <div class="flex justify-center mb-6">
+            <div class="bg-gray-800 p-4 rounded-full shadow-lg">
+                <img src="data:image/png;base64,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" alt="piping">
+
+            </div>
+        </div>
+        <!-- Auth Card -->
+        <div class="bg-gray-800 rounded-xl shadow-xl overflow-hidden transition-all duration-300">
+            <!-- Header -->
+            <div class="ha-gradient p-6 text-center">
+                <h1 class="text-2xl font-bold text-white">Умный водопровод</h1>
+                <p class="text-blue-100 mt-1">имени Александра Зарницына</p>
+            </div>
+            <!-- Auth Content -->
+            <div class="p-6 flex flex-col items-center">
+                <p class="text-gray-400 mb-6 text-center">Добро пожаловать в систему мониторинга и управления водоснабжением</p>
+                <!-- FaceID Button -->
+                <button 
+                    id="faceAuthBtn"
+                    onclick="startFaceAuth()"
+                    class="btn-ripple mb-6 px-6 py-3 ha-gradient text-white font-medium rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg flex items-center"
+                >
+                    <i class="fas fa-fingerprint text-xl mr-3"></i>
+                    <span>Войти через FaceID</span>
+                </button>
+                <!-- Camera Section -->
+                <div id="cameraSection" class="w-full text-center hidden">
+                    <div class="mb-4">
+                        <p class="text-gray-400 mb-3">Расположите лицо в центре экрана</p>
+                        <div class="relative mx-auto" style="width: 320px; height: 240px;">
+                            <video id="video" width="320" height="240" autoplay class="mx-auto bg-gray-900"></video>
+                            <div class="face-circle"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center space-x-4 mt-4">
+                        <button 
+                            id="retryBtn"
+                            class="px-4 py-2 bg-gray-700 text-gray-300 font-medium rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all"
+                        >
+                            <i class="fas fa-redo mr-2"></i>Повторить
+                        </button>
+                        <button 
+                            id="cancelBtn"
+                            class="px-4 py-2 bg-red-900 text-red-300 font-medium rounded-lg hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all"
+                        >
+                            <i class="fas fa-times mr-2"></i>Отмена
+                        </button>
+                    </div>
+                </div>
+                <canvas id="canvas" style="display:none;"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Footer -->
+    <footer class="mt-8 text-center text-gray-500 text-sm">
+        <p>Product by <span class="text-blue-400">WTS+AXIOM</span></p>
+    </footer>
+    <script src="/static/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const faceAuthBtn = document.getElementById('faceAuthBtn');
+            const cameraSection = document.getElementById('cameraSection');
+            const video = document.getElementById('video');
+            const retryBtn = document.getElementById('retryBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            
+            function toggleCameraSection(show) {
+                if (show) {
+                    cameraSection.classList.remove('hidden');
+                    setTimeout(() => video.classList.add('active'), 100);
+                } else {
+                    video.classList.remove('active');
+                    setTimeout(() => cameraSection.classList.add('hidden'), 500);
+                }
+            }
+
+            retryBtn.addEventListener('click', startFaceAuth);
+
+            cancelBtn.addEventListener('click', function() {
+                stopVideoStream();
+                toggleCameraSection(false);
+            });
+
+            function stopVideoStream() {
+                const stream = video.srcObject;
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                }
+            }
+
+            window.toggleCameraSection = toggleCameraSection;
+            window.stopVideoStream = stopVideoStream;
+        });
+    </script>
+</body>
+</html>
