@@ -44,6 +44,7 @@ def index():
 
 @app.route('/verify', methods=['POST'])
 def verify():
+    KNOWN_FACES = load_known_faces()
     data = request.json
     image_data = data['image'].split(',')[1]
     image = Image.open(io.BytesIO(base64.b64decode(image_data)))
